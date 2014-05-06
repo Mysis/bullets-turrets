@@ -1,0 +1,117 @@
+import pygame, random, math
+pygame.init()
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+WIDTH = 700
+HEIGHT = 500
+
+class Bullet(pygame.sprite.Sprite):
+
+    hspeed = 0
+    vspeed = 0
+    undef = 0
+    
+    def __init__(self, color, startx, starty, gotox, gotoy):
+        
+        pygame.sprite.Sprite.__init__(self)
+
+        self.image = pygame.Surface((10, 10))
+        self.image.fill(color)
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = startx
+        self.rect.y = starty
+
+        xdistance = gotox - startx
+        ydistance = gotoy - starty
+        vdistance = math.sqrt(xdistance*xdistance + ydistance*ydistance)
+
+        try:
+            self.hspeed = 10 * (xdistance/vdistance)
+            self.vspeed = 10 * (ydistance/vdistance)
+        except:
+            self.undef = 1
+            
+    def update(self):
+
+        pygame.sprite.Sprite.update(self)
+        self.rect.x += self.hspeed
+        self.rect.y += self.vspeed
+
+        if self.rect.x < 0 or self.rect.x > WIDTH or self.rect.y < 0 or self.rect.y > HEIGHT:
+            self.kill()
+            del self
+
+class Player():
+
+    hspeed = 0
+    vspeed = 0
+
+    def __init__(self, color):
+
+        pygame.sprite.Sprite.__init__(self)
+
+        self.image = pygame.Surface((50, 50))
+        self.image.fill(color)
+
+        self.rect = self.image.get_rect()
+
+        self.rect.x = WIDTH/2
+        self.rect.y = HEIGHT/2
+
+    def move(gotox, gotoy):
+
+        xdistance = gotox - self.rect.x
+        ydistance = gotoy - self.rect.y
+        vdistance = math.sqrt(xdistance*xdistance + ydistance*ydistance)
+        try:
+            self.hspeed = 10 * (xdistance/vdistance)
+            self.vspeed = 10 * (ydistance/vdistance)
+        except:
+            hspeed = 0
+            vspeed = 0
+    
+class Controller():
+
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+    def __init__(self):
+
+        clock = pygame.time.Clock()
+        bulletList = pygame.sprite.Group()
+        allSpritesList = pygame.sprite.Group()
+
+        player = Player(BLUE)
+        allSpritesList.add(player)
+        
+        done = 0
+        while not done:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    done = 1
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        pos = pygame.mouse.get_pos()
+                        bullet = Bullet(RED, player.rect.x + 15, player.rect.x + 15, pos[0], pos[1])
+                        bulletList.add(bullet)
+                        allSpritesList.add(bullet)
+                        if bullet.undef == 1:
+                            bullet.kill()
+                            del bullet
+
+            self.screen.fill(BLACK)
+            
+            allSpritesList.update()
+            
+            allSpritesList.draw(self.screen)
+            pygame.display.flip()
+
+            clock.tick(60)
+
+game = Controller()
